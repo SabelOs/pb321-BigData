@@ -1,6 +1,24 @@
 clc
 clear
 close all
+
+%% UN Populationsdaten – korrekt importieren
+
+filename = "WPP2024_GEN_F01_DEMOGRAPHIC_INDICATORS_COMPACT.xlsx";
+
+opts = detectImportOptions(filename);
+
+% Header-Zeile festlegen
+opts.VariableNamesRange = "A16";
+
+% Erste Datenzeile festlegen
+opts.DataRange = "A17";
+
+% Tabelle einlesen
+T = readtable(filename, opts);
+
+% Die Variablennamen sind noch nicht ganz korrekt 
+
  %% World Happiness Ranking (optimierter Import)
 WHR_file = "WHR25_Data_Figure_2.1v3.xlsx";
 
