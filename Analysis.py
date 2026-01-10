@@ -44,7 +44,7 @@ plt.xlabel("Year")
 plt.ylabel("Population (thousands)")
 plt.title("Population of All Countries Over Time")
 plt.tight_layout()
-plt.legend()
+#plt.legend()
 plt.show()
 # %%
 # %%
@@ -145,7 +145,7 @@ cax = divider.append_axes("right", size="5%", pad=0.1)
 # Plot WITHOUT legend
 world_pop.plot(
     column="population",
-    cmap="turbo",
+    cmap="RdYlBu",
     linewidth=0.4,
     ax=ax,
     edgecolor="black",
@@ -162,7 +162,7 @@ norm = mpl.colors.Normalize(
     vmax=world_pop["population"].max()
 )
 
-sm = mpl.cm.ScalarMappable(norm=norm, cmap="turbo")
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []  # required for older matplotlib
 
 cbar = fig.colorbar(sm, cax=cax)
@@ -214,29 +214,188 @@ for c in missing_in_pop:
     print(c)
 
 print(f"\nTotal missing: {len(missing_in_pop)}")
+
+
 # %%
 combined_df_2023 = pop_year.merge(
     df_hap_2023,
     on="country",
     how="left"
 )
+#%% Import GDP Data:
+df_GDP = pd.read_excel("Download-GDPcurrent-USD-countries.xlsx")
+df_GDP = df_GDP.set_axis(df_GDP.iloc[1],axis=1)
+df_GDP.drop(axis = 0, index = df_GDP.index[:1],inplace = True)
+df_GDP.reset_index(drop=True)
+
+gdp_indicator = "Total Value Added"
+df_gdp_filtered = df_GDP[
+    df_GDP["IndicatorName"] == gdp_indicator
+].copy()
+
+df_gdp_2023 = df_gdp_filtered[["Country", 2023.0]].copy()
+
+df_gdp_2023.columns = ["country", "gdp"]
+
+#Manually reasing some of the names which are diffrent between the map and UN data
+rename_map = {
+    #Scheme: pop_year : world_pop
+    "Viet Nam": "Vietnam",
+    "Bolivia (Plurinational State of)": "Bolivia",
+    "Republic of Moldova": "Moldova",
+    "Republic of Korea": "South Korea",
+    "Congo": "Republic of the Congo",   # adjust if needed
+    "D.R. of the Congo" : "Democratic Republic of the Congo",
+    "Türkiye": "Turkey",
+    "Eswatini": "Eswatini",  # needed if map uses Swaziland
+    "Brunei Darussalam" : "Brunei",
+    "Timor-Leste" : "East Timor",
+    "Iran (Islamic Republic of)" : "Iran",
+    "Russian Federation": "Russia",
+    "Kosovo (under UNSC res. 1244)" : "Kosovo",
+    "Dem. People's Republic of Korea" : "North Korea",
+    "State of Palestine" : "Palestine",
+    "Syrian Arab Republic" : "Syria",
+    "China, Taiwan Province of China" : "Taiwan",
+    "Bahamas" : "The Bahamas",
+    "United States" : "United States of America",
+    "Venezuela (Bolivarian Republic of)" : "Venezuela",
+    "Eswatini" : "eSwatini",
+    "Serbia" : "Republic of Serbia",
+    "Falkland Islands (Malvinas)" : "Falkland Islands",
+    "Côte d'Ivoire" : "Ivory Coast",
+    "U.R. of Tanzania: Mainland" : "United Republic of Tanzania",
+    "D.P.R of Korea" : "North Korea",
+    "Laos People's DR" : "Laos"
+
+}
+
+df_gdp_2023["country"] = df_gdp_2023["country"].replace(rename_map)
+
+combined_df_2023 = combined_df_2023.merge(
+    df_gdp_2023,
+    how="left",
+    left_on="country",    # or "country" — use whatever column combined_df_2023 has
+    right_on="country"
+)
+
+#Calculate the normalized gdp per capita
+combined_df_2023.insert(15,"gdp_per_capita",combined_df_2023["gdp"]/combined_df_2023["population"])
+
+#Now insert developement of the countries:
+industrial_countries = [
+    "Australia",
+    "Austria",
+    "Belgium",
+    "Canada",
+    "Denmark",
+    "Finland",
+    "France",
+    "Germany",
+    "Greece",
+    "Iceland",
+    "Ireland",
+    "Italy",
+    "Japan",
+    "Luxembourg",
+    "Netherlands",
+    "New Zealand",
+    "Norway",
+    "Portugal",
+    "Spain",
+    "Sweden",
+    "Switzerland",
+    "United Kingdom",
+    "United States of America",
+    "Israel",
+    "South Korea",
+    "Singapore",
+    "Taiwan",
+    "Turkey"
+    "Malta",
+    "Cyprus",
+    "Slovenia",
+    "Czechia",
+    "Estonia",
+    "Latvia",
+    "Lithuania",
+    "Slovakia"
+]
+
+emerging_economies = [
+    "China",
+    "India",
+    "Brazil",
+    "Mexico",
+    "Indonesia",
+    "South Africa",
+    "Argentina",
+    "Chile",
+    "Colombia",
+    "Peru",
+    "Vietnam",
+    "Thailand",
+    "Malaysia",
+    "Philippines",
+    "Poland",
+    "Hungary",
+    "Romania",
+    "Bulgaria",
+    "Russia",
+    "Kazakhstan",
+    "Ukraine",
+    "Saudi Arabia",
+    "United Arab Emirates",
+    "Qatar",
+    "Kuwait",
+    "Oman",
+    "Bahrain",
+    "Iran",
+    "Egypt",
+    "Morocco",
+    "Tunisia",
+    "Algeria"
+]
+
+#Create a new column and make all the countries developing first:
+combined_df_2023["development"] = "Developing country"
+
+#Replace industrial and emerging economies:
+combined_df_2023.loc[
+    combined_df_2023["country"].isin(industrial_countries),
+    "development"
+] = "Industrial country"
+
+combined_df_2023.loc[
+    combined_df_2023["country"].isin(emerging_economies),
+    "development"
+] = "Emerging economy"
+
+#check
+print(combined_df_2023["development"].value_counts())
+
+#%%
 world_happiness_2023 = world.merge(
     combined_df_2023,
     how="left",
     left_on="name",
     right_on="country"
 )
+
 world_happiness_2023["Life evaluation (3-year average)"] = pd.to_numeric(
     world_happiness_2023["Life evaluation (3-year average)"],
     errors="coerce"
 )
+
+
+
 fig, ax = plt.subplots(1, 1, figsize=(14, 8))
 divider = make_axes_locatable(ax)
 cax = divider.append_axes("right", size="5%", pad=0.1)
 
 world_happiness_2023.plot(
     column="Life evaluation (3-year average)",
-    cmap="viridis",
+    cmap="RdYlBu",
     linewidth=0.4,
     ax=ax,
     edgecolor="black",
@@ -253,7 +412,7 @@ norm = mpl.colors.Normalize(
     vmax=world_happiness_2023["Life evaluation (3-year average)"].max()
 )
 
-sm = mpl.cm.ScalarMappable(norm=norm, cmap="viridis")
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []
 
 cbar = fig.colorbar(sm, cax=cax)
@@ -263,6 +422,90 @@ ax.set_title("World Happiness Index (2023)", fontsize=14)
 ax.axis("off")
 
 plt.show()
+
+
+
 # %%
+fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+divider = make_axes_locatable(ax)
+cax = divider.append_axes("right", size="5%", pad=0.1)
+
+world_happiness_2023.plot(
+    column="gdp",
+    cmap="RdYlBu",
+    linewidth=0.4,
+    ax=ax,
+    edgecolor="black",
+    missing_kwds={
+        "color": "lightgrey",
+        "label": "No data"
+    },
+    legend=False
+)
+
+# Colorbar
+norm = mpl.colors.Normalize(
+    vmin=world_happiness_2023["gdp"].min(),
+    vmax=world_happiness_2023["gdp"].max()
+)
+
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
+sm._A = []
+
+cbar = fig.colorbar(sm, cax=cax)
+cbar.set_label("gdp")
+
+ax.set_title("GDP (2023)", fontsize=14)
+ax.axis("off")
+
+plt.show()
+# %% Plot gdp per capita
 
 
+fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+divider = make_axes_locatable(ax)
+cax = divider.append_axes("right", size="5%", pad=0.1)
+
+world_happiness_2023.plot(
+    column="gdp_per_capita",
+    cmap="RdYlBu",
+    linewidth=0.4,
+    ax=ax,
+    edgecolor="black",
+    missing_kwds={
+        "color": "lightgrey",
+        "label": "No data"
+    },
+    legend=False
+)
+
+# Colorbar
+norm = mpl.colors.Normalize(
+    vmin=world_happiness_2023["gdp_per_capita"].min(),
+    vmax=world_happiness_2023["gdp_per_capita"].max()
+)
+
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
+sm._A = []
+
+cbar = fig.colorbar(sm, cax=cax)
+cbar.set_label("gdp_per_capita")
+
+ax.set_title("GDP per Capita (2023)", fontsize=14)
+ax.axis("off")
+
+plt.show()
+# %% Create happiness barplot per country
+df_sorted = combined_df_2023.dropna(subset=["Life evaluation (3-year average)"]).sort_values("Life evaluation (3-year average)")
+
+plt.figure(figsize=(6, 10))
+plt.barh(
+    df_sorted["country"],
+    df_sorted["Life evaluation (3-year average)"]
+)
+plt.xlabel("Life evaluation (3-year average)")
+plt.ylabel("Country")
+plt.tight_layout()
+plt.show()
+
+# %%
