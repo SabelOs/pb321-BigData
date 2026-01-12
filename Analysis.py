@@ -267,113 +267,98 @@ rename_map = {
     "U.R. of Tanzania: Mainland" : "United Republic of Tanzania",
     "D.P.R of Korea" : "North Korea",
     "Laos People's DR" : "Laos"
-
 }
 
 df_gdp_2023["country"] = df_gdp_2023["country"].replace(rename_map)
+try:
+    combined_df_2023 = combined_df_2023.merge(
+        df_gdp_2023,
+        how="left",
+        left_on="country",    # or "country" — use whatever column combined_df_2023 has
+        right_on="country"
+    )
+    #Calculate the normalized gdp per capita
+    combined_df_2023.insert(15,"gdp_per_capita",combined_df_2023["gdp"]/combined_df_2023["population"])
+except:
+    print("Did not match GDP again")
 
-combined_df_2023 = combined_df_2023.merge(
-    df_gdp_2023,
-    how="left",
-    left_on="country",    # or "country" — use whatever column combined_df_2023 has
-    right_on="country"
+
+#%% Now insert developement of the countries (World Bank classification for 2023):
+high_income_thresh = 14005
+upper_middle_income_thresh = 4516
+df_GNI = pd.read_excel("API_NY.GNP.PCAP.CD_DS2_en_excel_v2_875.xls")
+df_GNI = df_GNI.set_axis(df_GNI.iloc[2],axis=1)
+df_GNI.drop(axis = 0, index = df_GNI.index[:3],inplace = True)
+df_GNI.reset_index(drop=True)
+
+df_gni_2023 = df_GNI[["Country Name", 2023.0]].copy()
+
+df_gni_2023.columns = ["country", "gni"]
+
+
+
+#%%
+rename_map = {
+    "Hong Kong SAR, China" : "China, Hong Kong SAR",
+    "Macao SAR, China" : "China, Macao SAR",
+    "Curacao" : "Curaçao",
+    "Congo, Dem. Rep." : "Democratic Republic of the Congo",
+    "Egypt, Arab Rep." : "Egypt",
+    "Gambia, The" : "Gambia",
+    "Iran, Islamic Rep." : "Iran",
+    "Cote d'Ivoire" : "Ivory Coast",
+    "Kyrgyz Republic" : "Kyrgyzstan",
+    "Lao PDR" : "Laos",
+    "St. Martin (French part)" : "Martinique",
+    "Micronesia, Fed. Sts." : "Micronesia (Fed. State of)",
+    "Yemen, Rep." : "Yemen",
+    "Eswatini" : "eSwatini",
+    "Korea, Dem. People's Rep." : "North Korea",
+    "Puerto Rico (US)" : "Puerto Rico",
+    "Serbia" : "Republic of Serbia",
+    "Congo, Rep." : "Republic of the Congo",
+    "Russian Federation" : "Russia",
+    "Slovak Republic" : "Slovakia",
+    "Somalia, Fed. Rep." : "Somalia",
+    "Korea, Rep." : "South Korea",
+    "Syrian Arab Republic" : "Syria",
+    "Bahamas, The" : "The Bahamas",
+    "Turkiye" : "Turkey",
+    "Tanzania" : "United Republic of Tanzania",
+    "Virgin Islands (U.S.)" : "United States Virgin Islands",
+    "United States" : "United States of America",
+    "Venezuela, RB" : "Venezuela",
+    "Viet Nam" : "Vietnam"
+}
+df_gni_2023["country"] = df_gni_2023["country"].replace(rename_map)
+try:
+    combined_df_2023 = combined_df_2023.merge(
+        df_gni_2023,
+        how="left",
+        left_on="country",    # or "country" — use whatever column combined_df_2023 has
+        right_on="country"
+    )
+except:
+    print("Did not match GNI again")
+
+#%% Code for merging country data:
+combined_countries = set(
+    combined_df_2023["country"].dropna().unique()
 )
 
-#Calculate the normalized gdp per capita
-combined_df_2023.insert(15,"gdp_per_capita",combined_df_2023["gdp"]/combined_df_2023["population"])
+gni_countries = set(
+    df_gni_2023["country"].dropna().unique()
+)
+#%%
+not_merged = sorted(combined_countries - gni_countries)
 
-#Now insert developement of the countries:
-industrial_countries = [
-    "Australia",
-    "Austria",
-    "Belgium",
-    "Canada",
-    "Denmark",
-    "Finland",
-    "France",
-    "Germany",
-    "Greece",
-    "Iceland",
-    "Ireland",
-    "Italy",
-    "Japan",
-    "Luxembourg",
-    "Netherlands",
-    "New Zealand",
-    "Norway",
-    "Portugal",
-    "Spain",
-    "Sweden",
-    "Switzerland",
-    "United Kingdom",
-    "United States of America",
-    "Israel",
-    "South Korea",
-    "Singapore",
-    "Taiwan",
-    "Turkey"
-    "Malta",
-    "Cyprus",
-    "Slovenia",
-    "Czechia",
-    "Estonia",
-    "Latvia",
-    "Lithuania",
-    "Slovakia"
-]
+print("\nCountries in combined_df_2023 NOT found in df_gni_2023:\n")
+i=0
+for c in not_merged:
+    i+=1
+    print(c)
 
-emerging_economies = [
-    "China",
-    "India",
-    "Brazil",
-    "Mexico",
-    "Indonesia",
-    "South Africa",
-    "Argentina",
-    "Chile",
-    "Colombia",
-    "Peru",
-    "Vietnam",
-    "Thailand",
-    "Malaysia",
-    "Philippines",
-    "Poland",
-    "Hungary",
-    "Romania",
-    "Bulgaria",
-    "Russia",
-    "Kazakhstan",
-    "Ukraine",
-    "Saudi Arabia",
-    "United Arab Emirates",
-    "Qatar",
-    "Kuwait",
-    "Oman",
-    "Bahrain",
-    "Iran",
-    "Egypt",
-    "Morocco",
-    "Tunisia",
-    "Algeria"
-]
-
-#Create a new column and make all the countries developing first:
-combined_df_2023["development"] = "Developing country"
-
-#Replace industrial and emerging economies:
-combined_df_2023.loc[
-    combined_df_2023["country"].isin(industrial_countries),
-    "development"
-] = "Industrial country"
-
-combined_df_2023.loc[
-    combined_df_2023["country"].isin(emerging_economies),
-    "development"
-] = "Emerging economy"
-
-#check
-print(combined_df_2023["development"].value_counts())
-
+print(f"\nTotal missing: {len(not_merged)}")
 #%%
 world_happiness_2023 = world.merge(
     combined_df_2023,
@@ -495,6 +480,44 @@ ax.set_title("GDP per Capita (2023)", fontsize=14)
 ax.axis("off")
 
 plt.show()
+
+
+
+# %% Plot gni per capita
+fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+divider = make_axes_locatable(ax)
+cax = divider.append_axes("right", size="5%", pad=0.1)
+
+world_happiness_2023.plot(
+    column="gni",
+    cmap="RdYlBu",
+    linewidth=0.4,
+    ax=ax,
+    edgecolor="black",
+    missing_kwds={
+        "color": "lightgrey",
+        "label": "No data"
+    },
+    legend=False
+)
+
+# Colorbar
+norm = mpl.colors.Normalize(
+    vmin=world_happiness_2023["gni"].min(),
+    vmax=world_happiness_2023["gni"].max()
+)
+
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
+sm._A = []
+
+cbar = fig.colorbar(sm, cax=cax)
+cbar.set_label("gni")
+
+ax.set_title("GNI (2023)", fontsize=14)
+ax.axis("off")
+
+plt.show()
+
 # %% Create happiness barplot per country
 df_sorted = combined_df_2023.dropna(subset=["Life evaluation (3-year average)"]).sort_values("Life evaluation (3-year average)")
 
@@ -508,4 +531,28 @@ plt.ylabel("Country")
 plt.tight_layout()
 plt.show()
 
-# %%
+
+#%% Put the developement status as col:
+high_income_thresh = 13845
+upper_middle_income_thresh = 4466
+lower_middle_income_thresh = 1136
+low_income_thresh = 1135
+
+bins = [-np.inf, 1135, 4465, 13845, np.inf]
+labels = [
+    "Low income",
+    "Lower middle income",
+    "Upper middle income",
+    "High income"
+]
+
+combined_df_2023["world_bank_classification"] = pd.cut(
+    combined_df_2023["gni"],
+    bins=bins,
+    labels=labels
+)
+# %%Save 2023 DF as parquet
+combined_df_2023.to_parquet(
+    "combined2023_df.parquet",
+    engine="pyarrow"
+)
