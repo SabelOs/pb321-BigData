@@ -58,11 +58,14 @@ year = 2023
 pop_year = df_countries[df_countries["Year"] == year][
     [
         "Region, subregion, country or area *",
-        "Total Population, as of 1 July (thousands)"
+        "Total Population, as of 1 July (thousands)",
+        "Life Expectancy at Birth, both sexes (years)",
+        "Male Life Expectancy at Birth (years)",
+        "Female Life Expectancy at Birth (years)"
     ]
 ].copy()
 
-pop_year.columns = ["country", "population"]
+pop_year.columns = ["country", "population","Life_Expectancy_at_Birth","Male_Life_Expectancy_at_Birth","Female_Life_Expectancy_at_Birth"]
 
 #Multiply data by 1e3 to adjust for the scaling in the dataset:
 pop_year['population'] = pop_year['population']*1e3
@@ -310,7 +313,7 @@ rename_map = {
     "Kyrgyz Republic" : "Kyrgyzstan",
     "Lao PDR" : "Laos",
     "St. Martin (French part)" : "Martinique",
-    "Micronesia, Fed. Sts." : "Micronesia (Fed. State of)",
+    "Micronesia (Federated State of)" : "Micronesia (Fed. State of)",
     "Yemen, Rep." : "Yemen",
     "Eswatini" : "eSwatini",
     "Korea, Dem. People's Rep." : "North Korea",
@@ -328,7 +331,8 @@ rename_map = {
     "Virgin Islands (U.S.)" : "United States Virgin Islands",
     "United States" : "United States of America",
     "Venezuela, RB" : "Venezuela",
-    "Viet Nam" : "Vietnam"
+    "Viet Nam" : "Vietnam",
+    "Palestine, State of" : "Palestine"
 }
 df_gni_2023["country"] = df_gni_2023["country"].replace(rename_map)
 try:
@@ -359,6 +363,93 @@ for c in not_merged:
     print(c)
 
 print(f"\nTotal missing: {len(not_merged)}")
+
+#%% Finally, merge the HDR df into the combined df:
+df_HDR = pd.read_excel("HDR25_Statistical_Annex_HDI_Table.xlsx")
+#%%
+#df_HDR = df_HDR.set_axis(df_HDR.iloc[3],axis=1)
+df_HDR = df_HDR.rename(columns={
+    df_HDR.columns[0]: "HDI_rank_2023",
+    df_HDR.columns[1]: "country",
+    df_HDR.columns[2]: "HDI",
+    df_HDR.columns[3]: "a",
+    df_HDR.columns[4]: "life_expectancy_at_birth",
+    df_HDR.columns[5]: "b",
+    df_HDR.columns[6]: "expected_years_of_schooling",
+    df_HDR.columns[7]: "d",
+    df_HDR.columns[8]: "mean_years_of_schooling",
+    df_HDR.columns[9]: "e",
+    df_HDR.columns[10]: "GNI_2023",
+    df_HDR.columns[11]: "g",
+    df_HDR.columns[12]: "GNI_per_capita-HDI_rank",
+    df_HDR.columns[13]: "h",
+    df_HDR.columns[14]: "HDI_rank_2022",
+})
+df_HDR.drop(axis = 0, index = df_HDR.index[:7],inplace = True)
+df_HDR.reset_index(drop=True)
+
+df_hdr_2023 = df_HDR[["country", "HDI", "life_expectancy_at_birth", "expected_years_of_schooling", "GNI_2023", "GNI_per_capita-HDI_rank", "HDI_rank_2022"]].copy()
+
+
+rename_map = {
+    "Samoa" : "American Samoa",
+    "Bolivia (Plurinational State of)" : "Bolivia",
+    "Brunei Darussalam" : "Brunei",
+    "Hong Kong, China (SAR)" : "China, Hong Kong SAR",
+    "Congo (Democratic Republic of the)" : "Democratic Republic of the Congo",
+    "Eswatini (Kingdom of)" : "eSwatini",
+    "Iran (Islamic Republic of)": "Iran",
+    "Côte d'Ivoire" : "Ivory Coast",
+    "Lao People's Democratic Republic" : "Laos",
+    "Micronesia (Federated State of)" : "Micronesia (Fed. State of)",
+    "Moldova (Republic of)" : "Moldova",
+    "Korea (Democratic People's Rep. of)" : "North Korea",
+    "Palestine, State of" : "Palestine",
+    "Serbia" : "Republic of Serbia",
+    "Congo" : "Republic of the Congo",
+    "Russian Federation" : "Russia",
+    "Korea (Republic of)" : "South Korea",
+    "Syria Arab Republic" : "Syria",
+    "Bahamas" : "The Bahamas",
+    "Türkiye" : "Turkey",
+    "Tanzania (United Republic of)" : "United Republic of Tanzania",
+    "United States" : "United States of America",
+    "Venezuela (Bolivarian Republic of)" : "Venezuela",
+    "Viet Nam" : "Vietnam"
+}
+df_hdr_2023["country"] = df_hdr_2023["country"].replace(rename_map)
+
+
+try:
+    combined_df_2023 = combined_df_2023.merge(
+        df_hdr_2023,
+        how="left",
+        left_on="country",    # or "country" — use whatever column combined_df_2023 has
+        right_on="country"
+    )
+except:
+    print("Did not match GNI again")
+
+combined_countries = set(
+    combined_df_2023["country"].dropna().unique()
+)
+
+hdr_countries = set(
+    df_hdr_2023["country"].dropna().unique()
+)
+
+not_merged = sorted(combined_countries - hdr_countries)
+#%%
+print("\nCountries in combined_df_2023 NOT found in df_hdr_2023:\n")
+i=0
+for c in not_merged:
+    i+=1
+    if i<45:
+        continue
+    print(c)
+
+print(f"\nTotal missing: {len(not_merged)}")
+
 #%%
 world_happiness_2023 = world.merge(
     combined_df_2023,
@@ -372,7 +463,10 @@ world_happiness_2023["Life evaluation (3-year average)"] = pd.to_numeric(
     errors="coerce"
 )
 
-
+world_happiness_2023["HDI"] = pd.to_numeric(
+    world_happiness_2023["HDI"],
+    errors="coerce"
+)
 
 fig, ax = plt.subplots(1, 1, figsize=(14, 8))
 divider = make_axes_locatable(ax)
@@ -551,7 +645,120 @@ combined_df_2023["world_bank_classification"] = pd.cut(
     bins=bins,
     labels=labels
 )
+
+#%%
+from pandas.api.types import CategoricalDtype
+
+income_order = CategoricalDtype(
+    categories=[
+        "Low income",
+        "Lower middle income",
+        "Upper middle income",
+        "High income"
+    ],
+    ordered=True
+)
+
+combined_df_2023["world_bank_classification"] = (
+    combined_df_2023["world_bank_classification"]
+    .astype(income_order)
+)
+
+import matplotlib.patches as mpatches
+import numpy as np
+
+# Create World Bank classification in world_happiness_2023 based on GNI
+bins = [-np.inf, 1135, 4465, 13845, np.inf]
+labels = ["Low income", "Lower middle income", "Upper middle income", "High income"]
+
+world_happiness_2023["world_bank_classification"] = pd.cut(
+    world_happiness_2023["gni"],
+    bins=bins,
+    labels=labels
+)
+
+#Add a category for missing values
+world_happiness_2023["world_bank_classification"] = (
+    world_happiness_2023["world_bank_classification"]
+    .cat.add_categories("No data")
+    .fillna("No data")
+)
+
+# Manual color mapping
+income_colors = {
+    "Low income": "red",
+    "Lower middle income": "orange",
+    "Upper middle income": "yellow",
+    "High income": "blue",
+    "No data": "lightgrey"
+}
+
+# Map column to colors
+colors = world_happiness_2023["world_bank_classification"].map(income_colors)
+
+# Plot
+fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+
+world_happiness_2023.plot(
+    color=colors,
+    linewidth=0.4,
+    ax=ax,
+    edgecolor="black"
+)
+
+ax.set_title("World Bank Income Classification (2023)", fontsize=14)
+ax.axis("off")
+
+# Manual legend
+legend_handles = [mpatches.Patch(color=c, label=l) for l, c in income_colors.items()]
+ax.legend(
+    handles=legend_handles,
+    title="World Bank income group",
+    loc="lower left",
+    frameon=True
+)
+
+plt.show()
+
+
+# %% Plot hdi 
+fig, ax = plt.subplots(1, 1, figsize=(14, 8))
+divider = make_axes_locatable(ax)
+cax = divider.append_axes("right", size="5%", pad=0.1)
+
+world_happiness_2023.plot(
+    column="HDI",
+    cmap="RdYlBu",
+    linewidth=0.4,
+    ax=ax,
+    edgecolor="black",
+    missing_kwds={
+        "color": "lightgrey",
+        "label": "No data"
+    },
+    legend=False
+)
+
+# Colorbar
+norm = mpl.colors.Normalize(
+    vmin=world_happiness_2023["HDI"].min(),
+    vmax=world_happiness_2023["HDI"].max()
+)
+
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
+sm._A = []
+
+cbar = fig.colorbar(sm, cax=cax)
+cbar.set_label("hdi")
+
+ax.set_title("HDI (2023)", fontsize=14)
+ax.axis("off")
+
+plt.show()
+
+
 # %%Save 2023 DF as parquet
+combined_df_2023 = combined_df_2023.replace("..", np.nan)
 combined_df_2023.to_parquet(
     "combined2023_df.parquet",
     engine="pyarrow"
