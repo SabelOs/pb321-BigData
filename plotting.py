@@ -4,6 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Patch
 import seaborn as sns
+from matplotlib.lines import Line2D
 # %%
 df = pd.read_parquet("combined2023_df.parquet")
 countries = {"Germany", "United States of America", "Norway", "Iceland", "China", "India", "Mali", "Afghanistan", "Japan", "Finnland", "Argentina", "Austrailia","Egypt"}
@@ -56,7 +57,6 @@ plt.scatter(
     df_plot["Life_Expectancy_at_Birth"],
     df_plot["Life evaluation (3-year average)"],
     c=colors,
-    alpha=0.8,
     edgecolors="k",
     linewidths=0.3
 )
@@ -67,13 +67,82 @@ plt.xlabel("Lebenserwartung bei Geburt / Jahre", fontsize=12)
 plt.legend(
     handles=legend_handles,
     title="Weltbank Klassifikation",
-    loc="lower right",
+    loc="upper left",
     fontsize=12
 )
 
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Lebenserwartung.png")
 plt.show()
+
+# %% Happiness vs life expectancy with linear regression
+df_plot = df.dropna(subset=[
+    "Life evaluation (3-year average)",
+    "Life_Expectancy_at_Birth",
+    "world_bank_classification"
+])
+
+x = df_plot["Life_Expectancy_at_Birth"].values
+y = df_plot["Life evaluation (3-year average)"].values
+
+# linear regression
+a, b = np.polyfit(x, y, 1)
+
+x_fit = np.linspace(x.min(), x.max(), x.size)
+y_fit = a * x_fit + b
+
+# R²
+y_pred = a * x + b
+ss_res = np.sum((y - y_pred)**2)
+ss_tot = np.sum((y - y.mean())**2)
+r2 = 1 - ss_res / ss_tot
+
+colors = df_plot["world_bank_classification"].map(color_map)
+
+plt.figure(figsize=(9, 7))
+
+fit_line, = plt.plot(
+    x_fit,
+    y_fit,
+    color="black",
+    linestyle="dashed",
+    linewidth=2,
+    label=rf"Lineare Regression, $R^2 = {r2:.2f}$"
+)
+
+plt.scatter(
+    x,
+    y,
+    c=colors,
+    edgecolors="k",
+    linewidths=0.3
+)
+
+plt.xlabel("Lebenserwartung bei Geburt / Jahre", fontsize=12)
+plt.ylabel("Happinesscore / a.u.", fontsize=12)
+
+plt.legend(
+    handles=legend_handles + [fit_line],
+    title="Weltbank Klassifikation",
+    loc="upper left",
+    fontsize=12
+)
+
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Lebenserwartung-regression.png")
+plt.show()
+
+plt.figure(figsize=(8, 5))
+plt.scatter(x, np.abs(y-y_fit))
+plt.axhline(0, color="black", linestyle="dashed", linewidth=1)
+
+plt.xlabel("Lebenserwartung bei Geburt / Jahre")
+plt.ylabel("Residuen (Happiness)")
+plt.title("Residual plot – zunehmende Streuung bei kleiner Lebenserwartung")
+
+plt.tight_layout()
+plt.show()
+
 # %% Happiness vs education
 df_plot = df.dropna(subset=[
     "Life evaluation (3-year average)",
@@ -87,8 +156,7 @@ plt.figure(figsize=(9, 7))
 plt.scatter(
     df_plot["expected_years_of_schooling"],
     df_plot["Life evaluation (3-year average)"],
-    c=colors,
-    alpha=0.8
+    c=colors
 )
 
 plt.ylabel("Happinesscore / a.u.", fontsize=12)
@@ -98,9 +166,6 @@ plt.legend(handles=legend_handles, title="Weltbank Klassifikation")
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Bildung.png")
 plt.show()
-
-
-# %% Hapiness vs health
 
 
 # %% log(GDP) over Happiness
@@ -116,8 +181,7 @@ plt.figure(figsize=(9, 7))
 plt.scatter(
     df_plot["gdp"],
     df_plot["Life evaluation (3-year average)"],
-    c=colors,
-    alpha=0.8
+    c=colors
 )
 
 plt.ylabel("Happinesscore / a.u.", fontsize=12)
@@ -170,8 +234,7 @@ fit_line, = plt.plot(
 plt.scatter(
     df_plot["gdp_per_capita"],
     df_plot["Life evaluation (3-year average)"],
-    c=colors,
-    alpha=0.8
+    c=colors
 )
 
 
@@ -202,8 +265,7 @@ plt.scatter(
     df_hi["gdp_per_capita"],
     df_hi["Life evaluation (3-year average)"],
     c=color_map["High income"],
-    alpha=0.8,
-    label="High income"
+    label="Hohes Einkommen"
 )
 
 plt.ylabel("Happinesscore / a.u.", fontsize=12)
@@ -256,6 +318,92 @@ sns.heatmap(
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-correlation-Heatmap.png")
 plt.show()
+
+#%% Life expectancy vs gdp
+df_plot = df.dropna(subset=[
+    "Life_Expectancy_at_Birth",
+    "Male_Life_Expectancy_at_Birth",
+    "Female_Life_Expectancy_at_Birth",
+    "gdp_per_capita",
+    "world_bank_classification"
+])
+
+color_map = {
+    "Low income": "red",
+    "Lower middle income": "orange",
+    "Upper middle income": "gold",
+    "High income": "blue",
+}
+
+# Drop rows with unknown classifications
+df_plot = df_plot[df_plot["world_bank_classification"].isin(color_map)]
+
+colors = df_plot["world_bank_classification"].map(color_map)
+
+plt.figure(figsize=(9, 7))
+plt.scatter(
+    df_plot["gdp_per_capita"],
+    df_plot["Life_Expectancy_at_Birth"],
+    c=colors
+)
+
+plt.xlabel("BIP pro Einwohner / USD")
+plt.ylabel("Lebenserwartung / Jahre")
+plt.xscale("log")
+
+plt.legend(handles=legend_handles, title="Weltbank Klassifikation",loc="upper left")
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung.png")
+plt.show()
+
+plt.figure(figsize=(9, 7))
+
+plt.scatter(
+    df_plot["gdp_per_capita"],
+    df_plot["Male_Life_Expectancy_at_Birth"],
+    color="blue",
+    label="Männliche Lebenserwartung"
+)
+
+plt.scatter(
+    df_plot["gdp_per_capita"],
+    df_plot["Female_Life_Expectancy_at_Birth"],
+    color="pink",
+    label="Weibliche Lebenserwartung"
+)
+
+plt.xlabel("BIP pro Einwohner / USD")
+plt.ylabel("Lebenserwartung / Jahre")
+plt.xscale("log")
+
+plt.legend(loc="upper left")
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung-MannFrau.png")
+plt.show()
+
+
+gender_gap = (
+    df_plot["Female_Life_Expectancy_at_Birth"]
+    - df_plot["Male_Life_Expectancy_at_Birth"]
+)
+
+plt.figure(figsize=(9, 7))
+plt.scatter(
+    df_plot["gdp_per_capita"],
+    gender_gap,
+    c=colors,
+)
+
+plt.xlabel("GDP per capita (USD)")
+plt.ylabel("Differenz Lebenserwartung (Weiblich - Männlich) / Jahre")
+plt.xscale("log")
+
+plt.legend(handles=legend_handles, title="Weltbank Klassifikation",loc="upper left")
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung-Differenz.png")
+plt.show()
+
+
 #%% Individual countries: Happiness score
 df_plot = df_sel.sort_values("Life evaluation (3-year average)")
 
@@ -276,10 +424,6 @@ plt.barh(
 )
 
 plt.xlabel("Happinesscore / a.u.", fontsize=12)
-legend_handles = [
-    Patch(facecolor=color, label=label)
-    for label, color in color_map.items()
-]
 
 plt.legend(
     handles=legend_handles,
@@ -311,7 +455,7 @@ plt.barh(
     color=colors
 )
 
-plt.xlabel("BIP pro EInwohner / USD", fontsize=12)
+plt.xlabel("BIP pro Einwohner / USD", fontsize=12)
 legend_handles = [
     Patch(facecolor=color, label=label)
     for label, color in color_map.items()
