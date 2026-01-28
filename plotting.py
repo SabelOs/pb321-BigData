@@ -3,11 +3,13 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.patches import Patch
+import seaborn as sns
 # %%
 df = pd.read_parquet("combined2023_df.parquet")
 countries = {"Germany", "United States of America", "Norway", "Iceland", "China", "India", "Mali", "Afghanistan", "Japan", "Finnland", "Argentina", "Austrailia","Egypt"}
 #Selected Countries DF
 df_sel = df[df["country"].isin(countries)]
+plt.rcParams['font.family'] = 'Liberation Sans'
 
 color_map = {
     "Low income": "red",
@@ -22,6 +24,24 @@ legend_handles = [
     Patch(facecolor=color, label=label)
     for label, color in color_map.items()
 ]
+
+
+label_de = {
+    "Low income": "Niedriges Einkommen",
+    "Lower middle income": "Unteres mittleres Einkommen",
+    "Upper middle income": "Oberes mittleres Einkommen",
+    "High income": "Hohes Einkommen",
+}
+
+legend_handles = [
+    Patch(
+        facecolor=color_map[key],
+        label=label_de[key]
+    )
+    for key in color_map
+]
+
+
 # %% Happiness vs life expectancy
 df_plot = df.dropna(subset=[
     "Life evaluation (3-year average)",
@@ -33,26 +53,27 @@ colors = df_plot["world_bank_classification"].map(color_map)
 
 plt.figure(figsize=(9, 7))
 plt.scatter(
-    df_plot["Life evaluation (3-year average)"],
     df_plot["Life_Expectancy_at_Birth"],
+    df_plot["Life evaluation (3-year average)"],
     c=colors,
     alpha=0.8,
     edgecolors="k",
     linewidths=0.3
 )
 
-plt.xlabel("Happinesscore / a.u.", fontsize=12)
-plt.ylabel("Lebenserwartung bei Geburt / Jahre", fontsize=12)
+plt.ylabel("Happinesscore / a.u.", fontsize=12)
+plt.xlabel("Lebenserwartung bei Geburt / Jahre", fontsize=12)
 
 plt.legend(
     handles=legend_handles,
-    title="World Bank classification",
-    loc="lower right"
+    title="Weltbank Klassifikation",
+    loc="lower right",
+    fontsize=12
 )
 
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Lebenserwartung.png")
 plt.show()
-
 # %% Happiness vs education
 df_plot = df.dropna(subset=[
     "Life evaluation (3-year average)",
@@ -64,17 +85,18 @@ colors = df_plot["world_bank_classification"].map(color_map)
 
 plt.figure(figsize=(9, 7))
 plt.scatter(
-    df_plot["Life evaluation (3-year average)"],
     df_plot["expected_years_of_schooling"],
+    df_plot["Life evaluation (3-year average)"],
     c=colors,
     alpha=0.8
 )
 
-plt.xlabel("Happinesscore / a.u.", fontsize=12)
-plt.ylabel("Erwartete Schuljahre / Jahre", fontsize=12)
+plt.ylabel("Happinesscore / a.u.", fontsize=12)
+plt.xlabel("Erwartete Schuljahre / Jahre", fontsize=12)
 
-plt.legend(handles=legend_handles, title="World Bank classification")
+plt.legend(handles=legend_handles, title="Weltbank Klassifikation")
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Bildung.png")
 plt.show()
 
 
@@ -92,18 +114,19 @@ colors = df_plot["world_bank_classification"].map(color_map)
 
 plt.figure(figsize=(9, 7))
 plt.scatter(
-    df_plot["Life evaluation (3-year average)"],
     df_plot["gdp"],
+    df_plot["Life evaluation (3-year average)"],
     c=colors,
     alpha=0.8
 )
 
-plt.xlabel("Happinesscore / a.u.", fontsize=12)
-plt.ylabel("log(BIP) / USD", fontsize=12)
-plt.yscale("log")
+plt.ylabel("Happinesscore / a.u.", fontsize=12)
+plt.xlabel("BIP / USD", fontsize=12)
+#plt.xscale("log")
 
-plt.legend(handles=legend_handles, title="World Bank classification")
+plt.legend(handles=legend_handles, title="Weltbank Klassifikation")
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP.png")
 plt.show()
 
 
@@ -113,25 +136,126 @@ df_plot = df.dropna(subset=[
     "gdp_per_capita",
     "world_bank_classification"
 ])
+#regression:
+x = df_plot["Life evaluation (3-year average)"].values
+y = df_plot["gdp_per_capita"].values
+
+# log regression
+
+log_y = np.log(y)
+
+a, b = np.polyfit(x, log_y, 1)
+
+
+x_fit = np.linspace(x.min(), x.max(), 300)
+y_fit = np.exp(b) * np.exp(a * x_fit)
+
+#r² Wert:
+log_y_fit = a * x + b
+ss_res = np.sum((log_y - log_y_fit)**2)
+ss_tot = np.sum((log_y - log_y.mean())**2)
+r2 = 1 - ss_res / ss_tot
 
 colors = df_plot["world_bank_classification"].map(color_map)
 
 plt.figure(figsize=(9, 7))
+fit_line, = plt.plot(
+    y_fit,
+    x_fit,
+    color="black",
+    linewidth=2,
+    linestyle ='dashed',
+    label=rf"Logarithmische Regression, $R^2 = {r2:.2f}$"
+)
 plt.scatter(
-    df_plot["Life evaluation (3-year average)"],
     df_plot["gdp_per_capita"],
+    df_plot["Life evaluation (3-year average)"],
     c=colors,
     alpha=0.8
 )
 
-plt.xlabel("Happinesscore / a.u.", fontsize=12)
-plt.ylabel("log(BIP pro Einwohner) / USD", fontsize=12)
-plt.yscale("log")
 
-plt.legend(handles=legend_handles, title="World Bank classification")
+plt.ylabel("Happinesscore / a.u.", fontsize=12)
+plt.xlabel("BIP pro Einwohner / USD", fontsize=12)
+#plt.xscale("log")
+
+plt.legend(
+    handles=legend_handles + [fit_line],
+    title="Weltbank Klassifikation"
+)
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP_pro_Einwohner.png")
 plt.show()
 
+# %% GDP_per_Cap over Happiness (High income only)
+
+df_hi = df.dropna(subset=[
+    "Life evaluation (3-year average)",
+    "gdp_per_capita",
+    "world_bank_classification"
+])
+
+df_hi = df_hi[df_hi["world_bank_classification"] == "High income"]
+
+plt.figure(figsize=(9, 7))
+plt.scatter(
+    df_hi["gdp_per_capita"],
+    df_hi["Life evaluation (3-year average)"],
+    c=color_map["High income"],
+    alpha=0.8,
+    label="High income"
+)
+
+plt.ylabel("Happinesscore / a.u.", fontsize=12)
+plt.xlabel("BIP pro Einwohner / USD", fontsize=12)
+#plt.xscale("log")
+
+plt.legend(title="Weltbank Klassifikation")
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP_pro_Einwohner-HighIncome.png")
+plt.show()
+
+#%% Correlation heatmap
+columns_of_interest = [
+    "population",
+    "Life_Expectancy_at_Birth",
+    "Life evaluation (3-year average)",
+    "gdp_per_capita",
+    "gdp",
+    "gni",
+    "HDI",
+    "expected_years_of_schooling"
+]
+
+df_corr = df_plot[columns_of_interest].copy()
+df_corr["log_gdp_per_capita"] = np.log(df_corr["gdp_per_capita"])
+correlation_matrix = df_corr.corr()
+
+german_labels = {
+    "population": "Bevölkerung",
+    "Life_Expectancy_at_Birth": "Lebenserwartung",
+    "Life evaluation (3-year average)": "Happinesscore",
+    "gdp_per_capita": "BIP pro Einwohner",
+    "gdp": "BIP",
+    "gni": "GNI",
+    "HDI": "HDI",
+    "expected_years_of_schooling": "Erwartete Schuljahre",
+    "log_gdp_per_capita": "log(BIP pro Einwohner)"
+}
+correlation_matrix.rename(index=german_labels, columns=german_labels, inplace=True)
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(
+    correlation_matrix,
+    annot=True,
+    fmt=".2f",
+    cmap="coolwarm",
+    square=True,
+    cbar_kws={"shrink": 0.8}
+)
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-correlation-Heatmap.png")
+plt.show()
 #%% Individual countries: Happiness score
 df_plot = df_sel.sort_values("Life evaluation (3-year average)")
 
@@ -159,11 +283,12 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="World Bank classification",
+    title="Weltbank Klassifikation",
     loc="lower right"
 )
 
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-individual-Countries.png")
 plt.show()
 
 
@@ -194,11 +319,12 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="World Bank classification",
+    title="Weltbank Klassifikation",
     loc="lower right"
 )
 
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-individual-Countries.png")
 plt.show()
 
 #%% Individual countries: HDI
@@ -228,11 +354,12 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="World Bank classification",
+    title="Weltbank Klassifikation",
     loc="lower right"
 )
 
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-HDI-individual-Countries.png")
 plt.show()
 
 #%% Individual countries: GNI
@@ -262,11 +389,12 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="World Bank classification",
+    title="Weltbank Klassifikation",
     loc="lower right"
 )
 
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-GNI-individual-Countries.png")
 plt.show()
 
 #%% Individual countries: Poppulation
@@ -296,11 +424,12 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="World Bank classification",
+    title="Weltbank Klassifikation",
     loc="lower right"
 )
 
 plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/plot-Einwohnerzahl-individual-Countries.png")
 plt.show()
 
 # %%
