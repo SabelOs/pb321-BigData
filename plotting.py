@@ -167,6 +167,79 @@ plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Bildung.png")
 plt.show()
 
+#%% Hapiness vs education boxplots:
+bins = [0, 8, 10, 12, 14, 16, 18, float("inf")]
+labels = [
+    "≤ 8",
+    "8–10",
+    "10–12",
+    "12–14",
+    "14–16",
+    "16–18",
+    "> 18"
+]
+
+df_plot["schooling_bin"] = pd.cut(
+    df_plot["expected_years_of_schooling"],
+    bins=bins,
+    labels=labels,
+    right=True
+)
+
+box_data = [
+    df_plot.loc[df_plot["schooling_bin"] == label,
+                "Life evaluation (3-year average)"].dropna()
+    for label in labels
+]
+
+plt.figure(figsize=(9, 7))
+
+bp = plt.boxplot(
+    box_data,
+    labels=labels,
+    whis=[0, 100],        # whiskers go to min/max (extreme values)
+    showmeans=True,      # show mean
+    meanline=True,       # mean as line (not point)
+    patch_artist=True    # allows box coloring
+)
+
+# Box appearance
+for box in bp["boxes"]:
+    box.set(facecolor="lightgray", alpha=0.7)
+
+# Median line
+for median in bp["medians"]:
+    median.set(color="black", linewidth=2)
+
+# Mean line
+for mean in bp["means"]:
+    mean.set(color="red", linewidth=2)
+
+# Whiskers
+for whisker in bp["whiskers"]:
+    whisker.set(color="black", linewidth=1.5)
+
+# Caps
+for cap in bp["caps"]:
+    cap.set(color="black", linewidth=1.5)
+
+legend_elements = [
+    Line2D([0], [0], color="red", lw=2, label="Mittelwert"),
+    Line2D([0], [0], color="black", lw=2, label="Median"),
+]
+
+plt.legend(
+    handles=legend_elements,
+    loc="upper left",
+    frameon=True
+)
+plt.xlabel("Erwartete Bildungsdauer / Jahre")
+plt.ylabel("Happiness score / a.u.")
+
+plt.tight_layout()
+plt.savefig("/home/soeke/pb321-BigData/figures/boxplot-Happiness-Bildung.png")
+plt.show()
+
 
 # %% log(GDP) over Happiness
 df_plot = df.dropna(subset=[
