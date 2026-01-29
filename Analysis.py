@@ -148,7 +148,7 @@ cax = divider.append_axes("right", size="5%", pad=0.1)
 # Plot WITHOUT legend
 world_pop.plot(
     column="population",
-    cmap="RdYlBu",
+    cmap="Blues",
     linewidth=0.4,
     ax=ax,
     edgecolor="black",
@@ -165,15 +165,15 @@ norm = mpl.colors.Normalize(
     vmax=world_pop["population"].max()
 )
 
-sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
+sm = mpl.cm.ScalarMappable(norm=norm, cmap="Blues")
 sm._A = []  # required for older matplotlib
 
 cbar = fig.colorbar(sm, cax=cax)
-cbar.set_label("Population (thousands)")
+cbar.set_label("Einwohnerzahl",size = 14)
 
-ax.set_title(f"World Population by Country ({year})", fontsize=14)
+
 ax.axis("off")
-
+plt.savefig("/home/soeke/pb321-BigData/figures/world-population.png", bbox_inches="tight")
 plt.show()
 # %%
 
@@ -495,11 +495,11 @@ sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []
 
 cbar = fig.colorbar(sm, cax=cax)
-cbar.set_label("Life evaluation (3-year average)")
+cbar.set_label("Happiness Index / a.u.", fontsize=14)
 
-ax.set_title("World Happiness Index (2023)", fontsize=14)
+
 ax.axis("off")
-
+plt.savefig("/home/soeke/pb321-BigData/figures/world-hapiness.png", bbox_inches="tight")
 plt.show()
 
 
@@ -532,11 +532,11 @@ sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []
 
 cbar = fig.colorbar(sm, cax=cax)
-cbar.set_label("gdp")
+cbar.set_label("BIP", fontsize=14)
 
-ax.set_title("GDP (2023)", fontsize=14)
+#ax.set_title("BIP / USD", fontsize=14)
 ax.axis("off")
-
+plt.savefig("/home/soeke/pb321-BigData/figures/world-GDP.png", bbox_inches="tight")
 plt.show()
 # %% Plot gdp per capita
 
@@ -568,11 +568,11 @@ sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []
 
 cbar = fig.colorbar(sm, cax=cax)
-cbar.set_label("gdp_per_capita")
+cbar.set_label("BIP pro Einwohner / USD",fontsize=14)
 
-ax.set_title("GDP per Capita (2023)", fontsize=14)
+#ax.set_title("GDP per Capita (2023)", fontsize=14)
 ax.axis("off")
-
+plt.savefig("/home/soeke/pb321-BigData/figures/world-GDP_per_capita.png", bbox_inches="tight")
 plt.show()
 
 
@@ -605,11 +605,11 @@ sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []
 
 cbar = fig.colorbar(sm, cax=cax)
-cbar.set_label("gni")
+cbar.set_label("GNI / USD", fontsize=14)
 
-ax.set_title("GNI (2023)", fontsize=14)
+#ax.set_title("GNI (2023)", fontsize=14)
 ax.axis("off")
-
+plt.savefig("/home/soeke/pb321-BigData/figures/world-GNI.png", bbox_inches="tight")
 plt.show()
 
 # %% Create happiness barplot per country
@@ -649,27 +649,30 @@ combined_df_2023["world_bank_classification"] = pd.cut(
 #%%
 from pandas.api.types import CategoricalDtype
 
+# -----------------------------
+# World Bank income categories (German, ordered)
+# -----------------------------
 income_order = CategoricalDtype(
     categories=[
-        "Low income",
-        "Lower middle income",
-        "Upper middle income",
-        "High income"
+        "Niedriges Einkommen",
+        "Unteres mittleres Einkommen",
+        "Oberes mittleres Einkommen",
+        "Hohes Einkommen",
+        "Keine Daten"
     ],
     ordered=True
 )
 
-combined_df_2023["world_bank_classification"] = (
-    combined_df_2023["world_bank_classification"]
-    .astype(income_order)
-)
-
-import matplotlib.patches as mpatches
-import numpy as np
-
-# Create World Bank classification in world_happiness_2023 based on GNI
+# -----------------------------
+# Assign World Bank classification based on GNI
+# -----------------------------
 bins = [-np.inf, 1135, 4465, 13845, np.inf]
-labels = ["Low income", "Lower middle income", "Upper middle income", "High income"]
+labels = [
+    "Niedriges Einkommen",
+    "Unteres mittleres Einkommen",
+    "Oberes mittleres Einkommen",
+    "Hohes Einkommen"
+]
 
 world_happiness_2023["world_bank_classification"] = pd.cut(
     world_happiness_2023["gni"],
@@ -677,26 +680,30 @@ world_happiness_2023["world_bank_classification"] = pd.cut(
     labels=labels
 )
 
-#Add a category for missing values
+# Add category for missing values and enforce order
 world_happiness_2023["world_bank_classification"] = (
     world_happiness_2023["world_bank_classification"]
-    .cat.add_categories("No data")
-    .fillna("No data")
+    .cat.add_categories("Keine Daten")
+    .fillna("Keine Daten")
+    .astype(income_order)
 )
 
-# Manual color mapping
+# -----------------------------
+# Manual color mapping (German labels!)
+# -----------------------------
 income_colors = {
-    "Low income": "red",
-    "Lower middle income": "orange",
-    "Upper middle income": "yellow",
-    "High income": "blue",
-    "No data": "lightgrey"
+    "Niedriges Einkommen": "red",
+    "Unteres mittleres Einkommen": "orange",
+    "Oberes mittleres Einkommen": "yellow",
+    "Hohes Einkommen": "blue",
+    "Keine Daten": "lightgrey"
 }
 
-# Map column to colors
 colors = world_happiness_2023["world_bank_classification"].map(income_colors)
 
+# -----------------------------
 # Plot
+# -----------------------------
 fig, ax = plt.subplots(1, 1, figsize=(14, 8))
 
 world_happiness_2023.plot(
@@ -706,20 +713,25 @@ world_happiness_2023.plot(
     edgecolor="black"
 )
 
-ax.set_title("World Bank Income Classification (2023)", fontsize=14)
 ax.axis("off")
 
-# Manual legend
-legend_handles = [mpatches.Patch(color=c, label=l) for l, c in income_colors.items()]
+# -----------------------------
+# Legend (ordered, German)
+# -----------------------------
+legend_handles = [
+    mpatches.Patch(color=income_colors[label], label=label)
+    for label in income_order.categories
+]
+
 ax.legend(
     handles=legend_handles,
-    title="World Bank income group",
+    title="Weltbank-Einkommensklassifikation",
     loc="lower left",
     frameon=True
 )
 
+plt.savefig("/home/soeke/pb321-BigData/figures/world-worldbank-classification.png", bbox_inches="tight")
 plt.show()
-
 
 # %% Plot hdi 
 fig, ax = plt.subplots(1, 1, figsize=(14, 8))
@@ -749,11 +761,11 @@ sm = mpl.cm.ScalarMappable(norm=norm, cmap="RdYlBu")
 sm._A = []
 
 cbar = fig.colorbar(sm, cax=cax)
-cbar.set_label("hdi")
+cbar.set_label("HDI")
 
-ax.set_title("HDI (2023)", fontsize=14)
+#ax.set_title("HDI (2023)", fontsize=14)
 ax.axis("off")
-
+plt.savefig("/home/soeke/pb321-BigData/figures/world-HDI.png", bbox_inches="tight")
 plt.show()
 
 

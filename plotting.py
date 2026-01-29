@@ -7,9 +7,32 @@ import seaborn as sns
 from matplotlib.lines import Line2D
 # %%
 df = pd.read_parquet("combined2023_df.parquet")
-countries = {"Germany", "United States of America", "Norway", "Iceland", "China", "India", "Mali", "Afghanistan", "Japan", "Finnland", "Argentina", "Austrailia","Egypt"}
-#Selected Countries DF
-df_sel = df[df["country"].isin(countries)]
+
+# English → German country names
+country_translation = {
+    "Germany": "Deutschland",
+    "United States of America": "Vereinigte Staaten",
+    "Norway": "Norwegen",
+    "Iceland": "Island",
+    "China": "China",
+    "India": "Indien",
+    "Mali": "Mali",
+    "Afghanistan": "Afghanistan",
+    "Japan": "Japan",
+    "Finland": "Finnland",
+    "Argentina": "Argentinien",
+    "Australia": "Australien",
+    "Egypt": "Ägypten"
+}
+
+# Countries to select (use English names as stored in the data!)
+countries = set(country_translation.keys())
+
+# Select countries
+df_sel = df[df["country"].isin(countries)].copy()
+
+# Rename to German
+df_sel["country"] = df_sel["country"].replace(country_translation)
 plt.rcParams['font.family'] = 'Liberation Sans'
 
 color_map = {
@@ -66,7 +89,7 @@ plt.xlabel("Lebenserwartung bei Geburt / Jahre", fontsize=12)
 
 plt.legend(
     handles=legend_handles,
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="upper left",
     fontsize=12
 )
@@ -123,7 +146,7 @@ plt.ylabel("Happinesscore / a.u.", fontsize=12)
 
 plt.legend(
     handles=legend_handles + [fit_line],
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="upper left",
     fontsize=12
 )
@@ -162,7 +185,7 @@ plt.scatter(
 plt.ylabel("Happinesscore / a.u.", fontsize=12)
 plt.xlabel("Erwartete Schuljahre / Jahre", fontsize=12)
 
-plt.legend(handles=legend_handles, title="Weltbank Klassifikation")
+plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation")
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Bildung.png")
 plt.show()
@@ -261,7 +284,7 @@ plt.ylabel("Happinesscore / a.u.", fontsize=12)
 plt.xlabel("BIP / USD", fontsize=12)
 #plt.xscale("log")
 
-plt.legend(handles=legend_handles, title="Weltbank Klassifikation")
+plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation")
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP.png")
 plt.show()
@@ -317,7 +340,7 @@ plt.xlabel("BIP pro Einwohner / USD", fontsize=12)
 
 plt.legend(
     handles=legend_handles + [fit_line],
-    title="Weltbank Klassifikation"
+    title="Weltbank-Einkommensklassifikation"
 )
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP_pro_Einwohner.png")
@@ -345,7 +368,7 @@ plt.ylabel("Happinesscore / a.u.", fontsize=12)
 plt.xlabel("BIP pro Einwohner / USD", fontsize=12)
 #plt.xscale("log")
 
-plt.legend(title="Weltbank Klassifikation")
+plt.legend(title="Weltbank-Einkommensklassifikation")
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP_pro_Einwohner-HighIncome.png")
 plt.show()
@@ -389,6 +412,8 @@ sns.heatmap(
     cbar_kws={"shrink": 0.8}
 )
 plt.tight_layout()
+plt.xticks(rotation=45, ha="right",fontsize=14)
+plt.yticks(fontsize=14)
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-correlation-Heatmap.png")
 plt.show()
 
@@ -424,7 +449,7 @@ plt.xlabel("BIP pro Einwohner / USD")
 plt.ylabel("Lebenserwartung / Jahre")
 plt.xscale("log")
 
-plt.legend(handles=legend_handles, title="Weltbank Klassifikation",loc="upper left")
+plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation",loc="upper left")
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung.png")
 plt.show()
@@ -471,7 +496,7 @@ plt.xlabel("GDP per capita (USD)")
 plt.ylabel("Differenz Lebenserwartung (Weiblich - Männlich) / Jahre")
 plt.xscale("log")
 
-plt.legend(handles=legend_handles, title="Weltbank Klassifikation",loc="upper left")
+plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation",loc="upper left")
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung-Differenz.png")
 plt.show()
@@ -500,7 +525,7 @@ plt.xlabel("Happinesscore / a.u.", fontsize=12)
 
 plt.legend(
     handles=legend_handles,
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="lower right"
 )
 
@@ -536,7 +561,7 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="lower right"
 )
 
@@ -571,7 +596,7 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="lower right"
 )
 
@@ -606,7 +631,7 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="lower right"
 )
 
@@ -641,7 +666,7 @@ legend_handles = [
 
 plt.legend(
     handles=legend_handles,
-    title="Weltbank Klassifikation",
+    title="Weltbank-Einkommensklassifikation",
     loc="lower right"
 )
 
