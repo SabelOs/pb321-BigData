@@ -87,7 +87,7 @@ plt.scatter(
     linewidths=0.3
 )
 
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 plt.xlabel("Lebenserwartung bei Geburt / Jahre", fontsize=14)
 
 plt.legend(
@@ -146,7 +146,7 @@ plt.scatter(
 )
 
 plt.xlabel("Lebenserwartung bei Geburt / Jahre", fontsize=14)
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 
 plt.legend(
     handles=legend_handles + [fit_line],
@@ -187,7 +187,7 @@ plt.scatter(
     c=colors
 )
 
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 plt.xlabel("Erwartete Schuljahre / Jahre", fontsize=14)
 
 plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation",title_fontsize=15,fontsize=14)
@@ -263,7 +263,7 @@ plt.legend(
     fontsize=14
 )
 plt.xlabel("Erwartete Bildungsdauer / Jahre")
-plt.ylabel("Happiness score / a.u.")
+plt.ylabel("Happiness Index / a.u.")
 
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/boxplot-Happiness-Bildung.png")
@@ -286,7 +286,7 @@ plt.scatter(
     c=colors
 )
 
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 plt.xlabel("BIP / USD", fontsize=14)
 #plt.xscale("log")
 
@@ -339,7 +339,7 @@ plt.scatter(
 )
 
 plt.xlabel("HDI / a.u.", fontsize=14)
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 
 plt.legend(
     handles=legend_handles + [fit_line],
@@ -399,7 +399,7 @@ plt.scatter(
 )
 
 
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 plt.xlabel("BIP pro Einwohner / USD", fontsize=14)
 #plt.xscale("log")
 
@@ -431,7 +431,7 @@ plt.scatter(
     label="Hohes Einkommen"
 )
 
-plt.ylabel("Happiness Score / a.u.", fontsize=14)
+plt.ylabel("Happiness Index / a.u.", fontsize=14)
 plt.xlabel("BIP pro Einwohner / USD", fontsize=14)
 #plt.xscale("log")
 
@@ -600,7 +600,7 @@ plt.show()
 
 
 
-#%% Individual countries: Happiness score
+#%% Individual countries: Happiness Index
 df_plot = df_sel.sort_values("Life evaluation (3-year average)")
 
 color_map = {
@@ -619,7 +619,7 @@ plt.barh(
     color=colors
 )
 
-plt.xlabel("Happiness Score / a.u.", fontsize=14)
+plt.xlabel("Happiness Index / a.u.", fontsize=14)
 
 plt.legend(
     handles=legend_handles,
@@ -634,7 +634,7 @@ plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-individual-Countri
 plt.show()
 
 
-#%% Individual countries: Happiness score
+#%% Individual countries: Happiness Index
 df_plot = df_sel.sort_values("gdp_per_capita")
 
 color_map = {
