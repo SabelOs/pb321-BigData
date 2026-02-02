@@ -34,6 +34,9 @@ df_sel = df[df["country"].isin(countries)].copy()
 # Rename to German
 df_sel["country"] = df_sel["country"].replace(country_translation)
 plt.rcParams['font.family'] = 'Liberation Sans'
+plt.rcParams['xtick.labelsize'] = 14
+plt.rcParams['ytick.labelsize'] = 14
+plt.rcParams['axes.labelsize'] = 14
 
 color_map = {
     "Low income": "red",
@@ -91,9 +94,10 @@ plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
     loc="upper left",
-    fontsize=14
+    fontsize=14,
+    title_fontsize=15
 )
-
+plt.xticks()
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Lebenserwartung.png")
 plt.show()
@@ -148,7 +152,8 @@ plt.legend(
     handles=legend_handles + [fit_line],
     title="Weltbank-Einkommensklassifikation",
     loc="upper left",
-    fontsize=14
+    fontsize=14,
+    title_fontsize=15
 )
 
 plt.tight_layout()
@@ -185,7 +190,7 @@ plt.scatter(
 plt.ylabel("Happiness Score / a.u.", fontsize=14)
 plt.xlabel("Erwartete Schuljahre / Jahre", fontsize=14)
 
-plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation")
+plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation",title_fontsize=15,fontsize=14)
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-Bildung.png")
 plt.show()
@@ -254,7 +259,8 @@ legend_elements = [
 plt.legend(
     handles=legend_elements,
     loc="upper left",
-    frameon=True
+    frameon=True,
+    fontsize=14
 )
 plt.xlabel("Erwartete Bildungsdauer / Jahre")
 plt.ylabel("Happiness score / a.u.")
@@ -284,7 +290,7 @@ plt.ylabel("Happiness Score / a.u.", fontsize=14)
 plt.xlabel("BIP / USD", fontsize=14)
 #plt.xscale("log")
 
-plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation")
+plt.legend(handles=legend_handles, title="Weltbank-Einkommensklassifikation",title_fontsize=15,fontsize=14)
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP.png")
 plt.show()
@@ -339,7 +345,8 @@ plt.legend(
     handles=legend_handles + [fit_line],
     title="Weltbank-Einkommensklassifikation",
     loc="upper left",
-    fontsize=14
+    fontsize=14,
+    title_fontsize=15
 )
 
 plt.tight_layout()
@@ -398,7 +405,9 @@ plt.xlabel("BIP pro Einwohner / USD", fontsize=14)
 
 plt.legend(
     handles=legend_handles + [fit_line],
-    title="Weltbank-Einkommensklassifikation"
+    title="Weltbank-Einkommensklassifikation",
+    title_fontsize=15,
+    fontsize=14
 )
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP_pro_Einwohner.png")
@@ -426,7 +435,7 @@ plt.ylabel("Happiness Score / a.u.", fontsize=14)
 plt.xlabel("BIP pro Einwohner / USD", fontsize=14)
 #plt.xscale("log")
 
-plt.legend(title="Weltbank-Einkommensklassifikation")
+plt.legend(title="Weltbank-Einkommensklassifikation",title_fontsize=15,fontsize=14)
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Happiness-BIP_pro_Einwohner-HighIncome.png")
 plt.show()
@@ -466,7 +475,9 @@ plt.xscale("log")
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="upper left"
+    loc="upper left",
+    title_fontsize=15,
+    fontsize=14
 )
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung.png")
@@ -492,7 +503,7 @@ plt.xlabel("BIP pro Einwohner / USD")
 plt.ylabel("Lebenserwartung / Jahre")
 plt.xscale("log")
 
-plt.legend(loc="upper left")
+plt.legend(loc="upper left",fontsize=14)
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung-MannFrau.png")
 plt.show()
@@ -516,7 +527,9 @@ plt.xscale("log")
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="upper left"
+    loc="upper left",
+    title_fontsize=15,
+    fontsize=14
 )
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-BIP_pro_Einwohner-Lebenserwartung-Differenz.png")
@@ -550,7 +563,7 @@ correlation_matrix = df_corr.corr()
 german_labels = {
     "population": "Bevölkerung",
     "Life_Expectancy_at_Birth": "Lebenserwartung",
-    "Life evaluation (3-year average)": "Happiness Score",
+    "Life evaluation (3-year average)": "Happiness Index",
     "gdp_per_capita": "BIP pro Einwohner",
     "gdp": "BIP",
     "gni": "GNI",
@@ -611,7 +624,9 @@ plt.xlabel("Happiness Score / a.u.", fontsize=14)
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="lower right"
+    loc="upper left",
+    title_fontsize=15,
+    fontsize=14
 )
 
 plt.tight_layout()
@@ -639,15 +654,19 @@ plt.barh(
 )
 
 plt.xlabel("BIP pro Einwohner / USD", fontsize=14)
+"""
 legend_handles = [
     Patch(facecolor=color, label=label)
     for label, color in color_map.items()
 ]
+"""
 
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="lower right"
+    loc="lower right",
+    title_fontsize=15,
+    fontsize=14
 )
 
 plt.tight_layout()
@@ -674,15 +693,19 @@ plt.barh(
 )
 
 plt.xlabel("HDI / a.u.", fontsize=14)
+"""
 legend_handles = [
     Patch(facecolor=color, label=label)
     for label, color in color_map.items()
 ]
+"""
 
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="lower right"
+    loc="upper left",
+    title_fontsize=15,
+    fontsize=14
 )
 
 plt.tight_layout()
@@ -709,15 +732,14 @@ plt.barh(
 )
 
 plt.xlabel("GNI (2023) / USD", fontsize=14)
-legend_handles = [
-    Patch(facecolor=color, label=label)
-    for label, color in color_map.items()
-]
+
 
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="lower right"
+    loc="lower right",
+    title_fontsize=15,
+    fontsize=14
 )
 
 plt.tight_layout()
@@ -744,15 +766,14 @@ plt.barh(
 )
 
 plt.xlabel("Einwohnerzahl", fontsize=14)
-legend_handles = [
-    Patch(facecolor=color, label=label)
-    for label, color in color_map.items()
-]
+
 
 plt.legend(
     handles=legend_handles,
     title="Weltbank-Einkommensklassifikation",
-    loc="lower right"
+    loc="lower right",
+    title_fontsize=15,
+    fontsize=14
 )
 
 plt.tight_layout()
@@ -788,7 +809,7 @@ plt.bar(
 plt.xticks(x, df_plot["country"], rotation=45)
 plt.ylabel("Lebenserwartung / Jahre", fontsize=14)
 
-plt.legend(loc="upper left")
+plt.legend(loc="upper left",fontsize=14)
 plt.tight_layout()
 plt.savefig("/home/soeke/pb321-BigData/figures/plot-Lebenserwartung-MannFrau-individual-Countries.png")
 plt.show()
